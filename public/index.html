@@ -146,24 +146,15 @@
         datasets: [
           {
             data: [],
-            backgroundColor: [
-              "#ffcd56",
-              "#ff6384",
-              "#36a2eb",
-              "#fd6b19",
-              "#6e7abb",
-              "#95e982",
-              "#b839d8",
-            ],
+            backgroundColor: [],
           },
         ],
         labels: [],
       };
-
       function createChart() {
         var ctx = document.getElementById("myChart").getContext("2d");
         if (window.myPieChart) {
-          window.myPieChart.destroy(); // Destroy previous chart instance to avoid duplication
+          window.myPieChart.destroy();
         }
         window.myPieChart = new Chart(ctx, {
           type: "pie",
@@ -173,11 +164,12 @@
 
       function getBudget() {
         axios.get("http://localhost:3000/budget").then(function (res) {
-          for (var i = 0; i < res.data.myBudget.length; i++) {
-            dataSource.datasets[0].data.push(res.data.myBudget[i].budget);
-            dataSource.labels.push(res.data.myBudget[i].title);
+          for (var i = 0; i < res.data.length; i++) {
+            dataSource.datasets[0].data.push(res.data[i].budget);
+            dataSource.labels.push(res.data[i].title);
+            dataSource.datasets[0].backgroundColor[i] = res.data[i].color
           }
-          createChart(); // Call createChart() once after updating dataSource
+          createChart(); 
         });
       }
 
@@ -192,7 +184,7 @@
       svg.append("g").attr("class", "lines");
 
       var width = 400,
-        height = 285,
+        height = 255,
         radius = Math.min(width, height) / 2;
 
       var pie = d3.layout
@@ -218,22 +210,13 @@
         return d.data.title;
       };
 
-      var color = d3.scale
-        .ordinal()
-        .range([
-          "#98abc5",
-          "#8a89a6",
-          "#7b6888",
-          "#6b486b",
-          "#a05d56",
-          "#d0743c",
-          "#ff8c00",
-        ]);
+      var color = d3.scale.ordinal()
+      .range(dataSource.datasets[0].backgroundColor);
 
       axios
         .get("http://localhost:3000/budget")
         .then(function (res) {
-          var data = res.data.myBudget;
+          var data = res.data;
           updateChart(data);
         })
         .catch(function (error) {
@@ -275,7 +258,7 @@
           .append("text")
           .attr("dy", ".35em")
           .text(function (d) {
-            return d.data.title;
+            return d.data.title + `(${d.data.budget})`;
           });
 
         function midAngle(d) {
